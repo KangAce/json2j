@@ -4,24 +4,21 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import lombok.Data;
 import org.springframework.util.CollectionUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
+@Data
 public class ParseService {
-    private  String packName = "fun.imore.json2j.service";
+    private String packName = "fun.imore.json2j.service";
     private String filePath = "F:\\workspace\\github\\json2j\\src\\main\\java\\fun\\imore\\json2j\\service\\";
+
     public String parse(String json) {
 
         Object parse = JSON.parse(json);
         return null;
-    }
-
-    public static void main(String[] args) throws IOException {
-        ParseService parseService = new ParseService();
-        parseService.packName = "fun.imore.json2j.service";
-        parseService.jsonText2j("{a:1,b:'true',contents:{},lists:[]}");
     }
 
     public static void response2j(String url) {
@@ -35,7 +32,7 @@ public class ParseService {
      */
     public void jsonText2j(String json) throws IOException {
         Object parse = JSON.parse(json);
-        json2j(parse,packName , "Entity");
+        json2j(parse, packName, "Entity");
     }
 
     public String json2j(Object json, String packName, String className) throws IOException {
@@ -124,7 +121,7 @@ public class ParseService {
              * 2、将生成的对象放入根Java文件
              */
             type = captureName(StrUtil.toCamelCase(key));
-            type = json2j(value,packName, type);
+            type = json2j(value, packName, type);
         } else if (value instanceof JSONArray) {
             /**
              * 当对象是数组的时候
