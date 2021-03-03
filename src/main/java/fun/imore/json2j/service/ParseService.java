@@ -5,12 +5,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 @Data
+@Service
 public class ParseService {
     private String packName = "fun.imore.json2j.service";
     private String filePath = "F:\\workspace\\github\\json2j\\src\\main\\java\\fun\\imore\\json2j\\service\\";
@@ -36,31 +38,24 @@ public class ParseService {
     }
 
     public String json2j(Object json, String packName, String className) throws IOException {
-        /**
-         * Java文件的准备
-         */
-        StringBuilder stringBuilder = new StringBuilder();
-        /**
-         * 初始化包信息
-         */
-        stringBuilder.append("package ").append(packName).append(";\n");
-        stringBuilder.append("\n");
+        JavaEntity javaEntity = new JavaEntity();
+        javaEntity.packName(packName);
+
         /**
          * 初始化导入信息
          */
-        stringBuilder.append("import com.fasterxml.jackson.annotation.JsonSetter;\n");
-        stringBuilder.append("import lombok.Data;\n");
-        stringBuilder.append("import java.util.List;\n");
-        stringBuilder.append("\n");
+        javaEntity.importAdd("com.fasterxml.jackson.annotation.JsonSetter");
+        javaEntity.importAdd("lombok.Data");
+        javaEntity.importAdd("java.util.List");
         /**
          * 初始化注解信息
          */
-        stringBuilder.append("@Data\n");
+        javaEntity.annotationAdd("@Data");
+
         /**
          * 初始化类信息
          */
-        stringBuilder.append("public class ").append(className).append(" {\n");
-
+        javaEntity.className(className);
 
         if (json instanceof JSONObject) {
             JSONObject jsonObject = (JSONObject) json;
@@ -68,29 +63,27 @@ public class ParseService {
                 return "Object";
             }
             for (String key : jsonObject.keySet()) {
+                FieldEntity fieldEntity = new FieldEntity();
+                fieldEntity.setFieldName(key);
                 /**
                  * 设置字段注解
                  */
-                stringBuilder.append("    @JsonSetter(\"").append(key).append("\")\n");
+                fieldEntity.annotationAdd("@JsonSetter(\""+key+"\")");
                 /**
                  * 设置字段作用域
                  */
-                stringBuilder.append("    private ");
+                fieldEntity.setScope("private");
                 Object value = jsonObject.get(key);
                 String type = this.getType(value, key);
-
-                stringBuilder.append(type).append(" ");
-
-                //添加数据名称
-                stringBuilder.append(key).append(";\n");
+                fieldEntity.setType(new JavaEntity().className(type));
+                javaEntity.fieldAdd(fieldEntity);
             }
         } else if (json instanceof JSONArray) {
 
         }
 
-        stringBuilder.append("}\n");
         //写到文件
-        InputStream in_withcode = new ByteArrayInputStream(stringBuilder.toString().getBytes(StandardCharsets.UTF_8));
+        InputStream in_withcode = new ByteArrayInputStream(javaEntity.generate().toString().getBytes(StandardCharsets.UTF_8));
         OutputStream out = new FileOutputStream(filePath + className + ".java");
         to(in_withcode, out, null);
         return className;
