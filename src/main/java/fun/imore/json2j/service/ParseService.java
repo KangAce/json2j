@@ -40,10 +40,10 @@ public class ParseService {
     public String json2j(Object json, String packName, String className) throws IOException {
         JavaEntity javaEntity = new JavaEntity();
         javaEntity.packName(packName);
-
         /**
          * 初始化导入信息
          */
+        javaEntity.importAdd("com.alibaba.fastjson.annotation.JSONField");
         javaEntity.importAdd("com.fasterxml.jackson.annotation.JsonSetter");
         javaEntity.importAdd("lombok.Data");
         javaEntity.importAdd("java.util.List");
@@ -68,7 +68,9 @@ public class ParseService {
                 /**
                  * 设置字段注解
                  */
-                fieldEntity.annotationAdd("@JsonSetter(\""+key+"\")");
+                fieldEntity.annotationAdd("@JsonSetter(\"" + key + "\")");
+
+                fieldEntity.annotationAdd("@JSONField(name = \"" + key + "\")");
                 /**
                  * 设置字段作用域
                  */
@@ -125,7 +127,17 @@ public class ParseService {
             if (CollectionUtils.isEmpty(jsonArray)) {
                 return "List<Object>";
             } else {
-                String item = getType(jsonArray.get(0), key);
+                Object o = jsonArray.get(0);
+                if (o instanceof JSONObject) {
+                    JSONObject jsonObject = (JSONObject) o;
+                    for (int i = 1; i < jsonArray.size(); i++) {
+                        JSONObject tmpObject = (JSONObject) jsonArray.get(i);
+                        for (String s : tmpObject.keySet()) {
+                            jsonObject.put(s, tmpObject.get(s));
+                        }
+                    }
+                }
+                String item = getType(o, key);
                 type = "List<" + item + ">";
             }
         }
